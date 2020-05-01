@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Numbers = ({ peopleToShow }) => {
+const Numbers = ({ peopleToShow, removePerson }) => {
     // const peopleToShow = !showPeople
     //     ? persons
     //     : persons.filter(person => person.name.toLowerCase().includes(showPeople.toLowerCase()))
@@ -9,7 +9,7 @@ const Numbers = ({ peopleToShow }) => {
             <h2>Numbers</h2>
             <div>
                 {peopleToShow.map( (person) => 
-                    <p key={person.name}>{person.name} : {person.number}</p>
+                    <p key={person.id}>{person.name} : {person.number} <button onClick={() => removePerson(person.id)}>delete</button></p>
                 )}
             </div>
         </div>        
