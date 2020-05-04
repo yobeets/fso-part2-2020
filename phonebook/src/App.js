@@ -4,12 +4,14 @@ import PersonForm from './components/PersonForm'
 import Numbers from './components/Numbers'
 //import axios from 'axios'
 import personService from './services/persons'
+import Notification from './components/Notification'
 
 const App = () => {
     const [ persons, setPersons ] = useState([])
     const [ newName, setNewName ] = useState('')
     const [ newNumber, setNewNumber ] = useState('')
     const [ showPeople, setShowPeople ] = useState('') 
+    const [ notifMessage, setNotifMessage ] = useState(null)
 
     useEffect(() => {
         personService
@@ -17,15 +19,15 @@ const App = () => {
             .then(initialPeople => {
                 setPersons(initialPeople)
             })
-        // console.log('effect')
-        // axios
-        //     .get('http://localhost:3001/persons')
-        //     .then(response => {
-        //         console.log('promise fulfilled')
-        //         setPersons(response.data)
-        //     })
     }, [])
     console.log('render', persons.length, 'people')
+
+    const handleNotify = (message, type) => {
+        setNotifMessage({ message, type })
+        setTimeout(() => {
+            setNotifMessage(null)
+        }, 5000)
+    }
 
     const addPerson = (event) => {
         event.preventDefault()
@@ -43,20 +45,21 @@ const App = () => {
                 personService
                     .update(toUpdate.id, changedPerson)
                         .then(returnedPerson => {
-                        setPersons(persons.map(person => person.id !== toUpdate.id ? person : returnedPerson))
-    })
+                            setPersons(persons.map(person => person.id !== toUpdate.id ? person : returnedPerson))
+                            handleNotify(`'${returnedPerson.name}' was updated`, 'success')
+                        })
+                        .catch(error => {
+                            handleNotify(`'${changedPerson.name}' has already been removed`, 'error')
+                            setPersons(persons.filter(n => n.id !== toUpdate.id))
+                        })
             }
         } else {
             personService
                 .create(personObject)
                 .then(returnedPerson => {
                     setPersons(persons.concat(returnedPerson))
+                    handleNotify(`'${returnedPerson.name}' was added to the phonebook`, 'success')
                 })
-            // axios
-            //     .post('http://localhost:3001/persons', personObject)
-            //     .then(response => {
-            //         setPersons(persons.concat(response.data))
-            //     })
         }
         setNewName('')
         setNewNumber('')
@@ -70,6 +73,7 @@ const App = () => {
                 .remove(id)
                 .then(response => {
                     setPersons(persons.filter(person => person.id !== id))
+                    handleNotify(`'${toDelete.name}' was removed`, 'success')
                 })
         }
     }
@@ -94,35 +98,13 @@ const App = () => {
     return (
         <div>
             <h2>Phonebook</h2>
-            {/* <div>
-                Filter: <input
-                    value={showPeople} 
-                    onChange={handleFilter}
-                />
-            </div> */}
+            <Notification
+                message={notifMessage}
+            />
             <Search 
                 showPeople={showPeople} 
                 handleFilter={handleFilter} 
             />
-            {/* <h2>Add New</h2>
-            <form onSubmit={addPerson}>
-                <div>
-                    name: <input
-                        value={newName} 
-                        onChange={handleNewPerson}
-                    />
-                </div>
-                <div>
-                    number: <input 
-                        value={newNumber} 
-                        onChange={handleNewNumber}
-                    />
-                
-                </div>
-                <div>
-                    <button type="submit">add</button>
-                </div>
-            </form> */}
             <PersonForm 
                 newName={newName}
                 newNumber={newNumber}
@@ -130,12 +112,6 @@ const App = () => {
                 handleNewPerson={handleNewPerson}
                 handleNewNumber={handleNewNumber}
             />
-            {/* <h2>Numbers</h2>
-            <div>
-                {peopleToShow.map( (person) => 
-                    <p key={person.name}>{person.name} : {person.number}</p>
-                )}
-            </div> */}
             <Numbers
                 peopleToShow={peopleToShow}
                 removePerson={removePerson}
